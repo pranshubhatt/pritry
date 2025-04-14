@@ -1,5 +1,5 @@
 
-import { MessageSquare, Sidebar } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 
 const NoChatSelected = () => {
   return (
