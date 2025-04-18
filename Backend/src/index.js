@@ -21,8 +21,9 @@ app.use(cookieParser());
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://chatmate-frontend.onrender.com', // Your new frontend URL
-  'https://chatmate.onrender.com'           // Alternative URL if you prefer this
+  'https://pritry-frontend.onrender.com',
+  'https://pritry.onrender.com',
+  'https://pritry-1.onrender.com'  // Adding your backend URL
 ];
 
 const corsOptions = {
@@ -47,6 +48,19 @@ if (server._opts) {
     credentials: true
   };
 }
+
+// Root route
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    message: 'Chat API is running',
+    endpoints: {
+      health: '/health',
+      auth: '/api/auth/*',
+      messages: '/api/messages/*'
+    }
+  });
+});
 
 // API routes
 app.use("/api/auth", authRoutes);
