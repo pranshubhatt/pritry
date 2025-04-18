@@ -3,6 +3,10 @@ import { useAuthStore } from '../store/useAuthStore';
 import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare } from 'lucide-react';
 import AuthImagePattern from '../components/AuthImagePattern';
 import { Link } from 'react-router-dom';
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { KeyRound } from "lucide-react";
 
 const LoginPage = () => {
  const[showPassword,setShowPassword]= useState(false);
@@ -11,10 +15,52 @@ const LoginPage = () => {
   password:"",
  })
  const{login, isLoggingIn} = useAuthStore();
+ const [errors, setErrors] = useState({
+  email: "",
+  password: "",
+ });
+
+ const validateForm = () => {
+  let isValid = true;
+  const newErrors = { email: "", password: "" };
+
+  if (!formData.email) {
+    newErrors.email = "Email is required";
+    isValid = false;
+  } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    newErrors.email = "Please enter a valid email";
+    isValid = false;
+  }
+
+  if (!formData.password) {
+    newErrors.password = "Password is required";
+    isValid = false;
+  } else if (formData.password.length < 6) {
+    newErrors.password = "Password must be at least 6 characters";
+    isValid = false;
+  }
+
+  setErrors(newErrors);
+  return isValid;
+ };
+
+ const handleChange = (e) => {
+  const { name, value } = e.target;
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+  // Clear error when user starts typing
+  setErrors((prev) => ({
+    ...prev,
+    [name]: "",
+  }));
+ };
 
  const handleSubmit = async(e)=>{
   e.preventDefault();
-  login(formData);
+  if (!validateForm()) return;
+  await login(formData);
  }
   return (
     <div className="h-screen grid lg:grid-cols-2">
@@ -37,50 +83,45 @@ const LoginPage = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">Email</span>
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-base-content/40" />
+          <div className="space-y-4 rounded-md shadow-sm">
+            <div>
+              <Label htmlFor="email">Email address</Label>
+              <div className="mt-2 flex items-center gap-2">
+                <Mail className="h-5 w-5 text-gray-400" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={errors.email ? "border-red-500" : ""}
+                  placeholder="Enter your email"
+                />
               </div>
-              <input
-                type="email"
-                className={`input input-bordered w-full pl-10`}
-                placeholder="you@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+              )}
             </div>
-          </div>
 
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">Password</span>
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-base-content/40" />
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <div className="mt-2 flex items-center gap-2">
+                <KeyRound className="h-5 w-5 text-gray-400" />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={errors.password ? "border-red-500" : ""}
+                  placeholder="Enter your password"
+                />
               </div>
-              <input
-                type={showPassword ? "text" : "password"}
-                className={`input input-bordered w-full pl-10`}
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5 text-base-content/40" />
-                ) : (
-                  <Eye className="h-5 w-5 text-base-content/40" />
-                )}
-              </button> 
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+              )}
             </div>
           </div>
 

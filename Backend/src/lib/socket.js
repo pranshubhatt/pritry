@@ -18,6 +18,12 @@ const io = new Server(server, {
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
   },
+  cookie: {
+    name: "jwt",
+    httpOnly: true,
+    sameSite: "none",
+    secure: true
+  }
 });
 
 export function getReceiverSocketId(userId){

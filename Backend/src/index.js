@@ -23,29 +23,33 @@ const allowedOrigins = [
   'http://localhost:5173',
   'https://pritry-frontend.onrender.com',
   'https://pritry.onrender.com',
-  'https://pritry-1.onrender.com'  // Adding your backend URL
+  'https://pritry-1.onrender.com'
 ];
 
-const corsOptions = {
+app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
       console.log('Origin blocked:', origin);
-      callback(null, false);
     }
+    // Allow all origins during development
+    callback(null, true);
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-};
-
-app.use(cors(corsOptions));
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['set-cookie']
+}));
 
 // Socket.IO CORS configuration
 if (server._opts) {
   server._opts.cors = {
     origin: allowedOrigins,
-    credentials: true
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ['Content-Type', 'Authorization']
   };
 }
 

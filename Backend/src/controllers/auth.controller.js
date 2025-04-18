@@ -52,33 +52,38 @@ export const signup =  async(req,res)=>{
 
 // LOGIN STUFF
 export const login = async (req, res) => {
-    const { email, password } = req.body;
     try {
-      const user = await User.findOne({ email });
-  
-      if (!user) {
-        return res.status(400).json({ message: "Invalid email" });
-      }
-  
-      const isPasswordCorrect = await bcrypt.compare(password, user.password);
-      if (!isPasswordCorrect) {
-        return res.status(400).json({ message: "Invalid password" });
-      }
-  
-      // ✅ Set cookie here
-      generateToken(user._id, res);
-  
-      res.status(200).json({
-        _id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        profilePic: user.profilePic,
-      });
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ message: "Invalid email or password" });
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+        if (!isPasswordCorrect) {
+            return res.status(401).json({ message: "Invalid email or password" });
+        }
+
+        // Generate token and set cookie
+        generateToken(user._id, res);
+
+        // Send success response
+        res.status(200).json({
+            _id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            profilePic: user.profilePic,
+        });
     } catch (error) {
-      console.log("Error in login controller", error.message);
-      res.status(500).json({ message: "Internal Server Error" });
+        console.error("Error in login controller:", error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
-  };
+};
   
 // logout stuff
 export const logout =  (req,res)=>{
@@ -95,12 +100,12 @@ export const logout =  (req,res)=>{
 1️⃣ User sends a request with a profilePic (Base64 or URL).
 2️⃣ Backend checks if profilePic exists.
 3️⃣ Image is uploaded to Cloudinary, and a URL is received.
-4️⃣ User’s profile is updated in the database with the new image URL.
+4️⃣ User's profile is updated in the database with the new image URL.
 5️⃣ Success response is sent with the updated user data.
 6️⃣ If any error occurs, it is logged, and a 500 error is returned.
 
 ✅ If profilePic is missing → Returns 400 Bad Request.
-✅ If Cloudinary fails → Should return a proper error (but your code doesn’t handle this yet).
+✅ If Cloudinary fails → Should return a proper error (but your code doesn't handle this yet).
 ✅ If userId is invalid → The function might fail silently (needs better error handling).*/
 
 export const updateProfile = async(req,res)=>{

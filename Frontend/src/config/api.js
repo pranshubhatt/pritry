@@ -1,4 +1,4 @@
-export const BACKEND_URL = 'https://pritry-1.onrender.com';
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
 
 export const API_ENDPOINTS = {
   login: `${BACKEND_URL}/api/auth/login`,
