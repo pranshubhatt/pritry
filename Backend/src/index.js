@@ -38,8 +38,8 @@ const allowedOrigins = [
   'https://pritry-frontend.onrender.com',
   'https://pritry.onrender.com',
   'https://pritry-1.onrender.com',
-  // Add a wildcard for debugging
-  '*'
+  // Add your frontend URL without trailing slash
+  'https://chatmate-frontend.onrender.com'
 ];
 
 const corsOptions = {
@@ -54,8 +54,8 @@ const corsOptions = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-  exposedHeaders: ['set-cookie']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'x-auth-token'],
+  exposedHeaders: ['Authorization', 'Set-Cookie']
 };
 
 app.use(cors(corsOptions));
@@ -66,7 +66,7 @@ if (server._opts) {
     origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
   };
 }
 

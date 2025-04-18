@@ -39,6 +39,7 @@ export const signup =  async(req,res)=>{
             fullName : newUser.fullName,
             email: newUser.email,
             profilePic:newUser.profilePic,
+            token: token // Include token in response body
         })
     }
     else{
@@ -87,6 +88,7 @@ export const login = async (req, res) => {
             fullName: user.fullName,
             email: user.email,
             profilePic: user.profilePic,
+            token: token // Include token in response body as well
         });
     } catch (error) {
         console.error("Error in login controller:", error);
@@ -101,9 +103,8 @@ export const logout = (req,res) => {
         res.cookie("jwt", "", {
             maxAge: 0,
             httpOnly: true,
-            // Temporarily disable these for debugging
-            // sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-            // secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            secure: process.env.NODE_ENV === "production",
             path: "/"
         });
         res.status(200).json({message:"Logged out successfully"});

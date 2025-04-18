@@ -12,8 +12,22 @@ export const protectRoute = async (req, res, next) => {
         console.log("Cookies:", req.cookies);
         
         // Get token from various sources
-        const tokenFromCookie = req.cookies.jwt;
-        const tokenFromHeader = req.headers.authorization ? req.headers.authorization.replace('Bearer ', '') : null;
+        const tokenFromCookie = req.cookies?.jwt;
+        
+        // Handle Authorization header with more flexibility
+        let tokenFromHeader = null;
+        const authHeader = req.headers.authorization;
+        if (authHeader) {
+            // Handle 'Bearer token' format
+            if (authHeader.startsWith('Bearer ')) {
+                tokenFromHeader = authHeader.split(' ')[1];
+            } 
+            // Handle raw token format
+            else if (authHeader.match(/^[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/)) {
+                tokenFromHeader = authHeader;
+            }
+        }
+        
         const tokenFromCustomHeader = req.headers['x-auth-token'];
         
         // Choose the first available token
@@ -55,6 +69,8 @@ export const protectRoute = async (req, res, next) => {
             res.cookie("jwt", "", {
                 maxAge: 0,
                 httpOnly: true,
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+                secure: process.env.NODE_ENV === "production",
                 path: "/"
             });
             

@@ -64,16 +64,27 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post("/auth/signup", data);
       
-      // Save token if provided
+      // Save token if provided in Authorization header
       if (res.headers && res.headers['authorization']) {
         const token = res.headers['authorization'].replace('Bearer ', '');
+        console.log("Signup: Token extracted from response headers");
         setMemoryToken(token);
+      } else {
+        // Check for token in response body as fallback
+        const token = res.data?.token;
+        if (token) {
+          console.log("Signup: Token extracted from response body");
+          setMemoryToken(token);
+        } else {
+          console.log("Signup: No token found in response");
+        }
       }
       
       set({ authUser: res.data });
       toast.success("Account created successfully");
       get().connectSocket();
     } catch (error) {
+      console.error("Signup error:", error);
       toast.error(getErrorMessage(error));
     } finally {
       set({ isSigningUp: false });
@@ -85,16 +96,27 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post("/auth/login", data);
       
-      // Save token if provided
+      // Save token if provided in Authorization header
       if (res.headers && res.headers['authorization']) {
         const token = res.headers['authorization'].replace('Bearer ', '');
+        console.log("Login: Token extracted from response headers");
         setMemoryToken(token);
+      } else {
+        // Check for token in response body as fallback
+        const token = res.data?.token;
+        if (token) {
+          console.log("Login: Token extracted from response body");
+          setMemoryToken(token);
+        } else {
+          console.log("Login: No token found in response");
+        }
       }
       
       set({ authUser: res.data });
       toast.success("Logged in successfully");
       get().connectSocket();
     } catch (error) {
+      console.error("Login error:", error);
       toast.error(getErrorMessage(error));
     } finally {
       set({ isLoggingIn: false });

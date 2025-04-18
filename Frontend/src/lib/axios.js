@@ -70,7 +70,9 @@ axiosInstance.interceptors.response.use(
     // Extract token from response header if available
     const authHeader = response.headers['authorization'];
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      setMemoryToken(authHeader.split(' ')[1]);
+      const token = authHeader.split(' ')[1];
+      console.log('Token extracted from response headers');
+      setMemoryToken(token);
     }
     
     return response;
@@ -91,9 +93,20 @@ axiosInstance.interceptors.response.use(
       baseURL: error.config?.baseURL
     });
     
-    // If we get a network error, show a specific message
+    // Specific handling for different error types
     if (error.message === 'Network Error') {
       toast.error('Network error: Unable to connect to the server. Please check your internet connection or try again later.');
+    } else if (error.response) {
+      // Handle 401 Unauthorized errors
+      if (error.response.status === 401) {
+        if (error.config.url !== '/auth/login' && error.config.url !== '/auth/signup') {
+          // Don't show error for normal auth flow
+          console.log('Authentication required - redirecting to login');
+        } else {
+          // Show error for failed login/signup attempts
+          toast.error(error.response.data?.message || 'Authentication failed');
+        }
+      }
     }
     
     return Promise.reject(error);
