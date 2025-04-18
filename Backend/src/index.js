@@ -22,6 +22,8 @@ app.use(cookieParser());
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:4000',
+  'https://frontend-2c5v.onrender.com',
+  'https://backend-yzux.onrender.com',
   'https://pritry-frontend.onrender.com',
   'https://pritry.onrender.com',
   'https://pritry-1.onrender.com'
