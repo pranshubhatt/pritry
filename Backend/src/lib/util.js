@@ -7,12 +7,13 @@ export const generateToken = (userId, res) => {
 
   console.log("Setting JWT cookie for user:", userId);
   
-  // Simpler cookie settings to ensure compatibility
+  // Simplify cookies for debugging
   res.cookie("jwt", token, {
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in MS
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    secure: process.env.NODE_ENV === "production",
+    // Temporarily disable these for debugging
+    // sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    // secure: process.env.NODE_ENV === "production",
     path: "/"
   });
 

@@ -3,13 +3,39 @@ import User from "../models/user.models.js"
 
 export const protectRoute = async (req, res, next) => {
     try {
-        const token = req.cookies.jwt;
-        
+        console.log("================== Auth Request ==================");
+        console.log("Headers:", req.headers);
         console.log("Cookies received:", req.cookies);
+        
+        const token = req.cookies.jwt;
         console.log("JWT token from cookies:", token);
 
         if (!token) {
             console.log("No token found in cookies");
+            
+            // Try to get token from Authorization header for testing
+            const authHeader = req.headers.authorization;
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+                const headerToken = authHeader.split(' ')[1];
+                console.log("Found token in Authorization header:", headerToken);
+                req.tokenFromHeader = headerToken;
+                
+                try {
+                    const decoded = jwt.verify(headerToken, process.env.JWT_SECRET);
+                    console.log("Header token decoded successfully:", decoded);
+                    
+                    const user = await User.findById(decoded.userId).select("-password");
+                    if (!user) {
+                        return res.status(401).json({ message: "User not found" });
+                    }
+                    
+                    req.user = user;
+                    return next();
+                } catch (error) {
+                    console.log("Header token verification failed:", error.message);
+                }
+            }
+            
             return res.status(401).json({ message: "Unauthorized - No Token Provided" });
         }
 
@@ -33,8 +59,9 @@ export const protectRoute = async (req, res, next) => {
             res.cookie("jwt", "", {
                 maxAge: 0,
                 httpOnly: true,
-                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-                secure: process.env.NODE_ENV === "production",
+                // Temporarily disable these for debugging
+                // sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+                // secure: process.env.NODE_ENV === "production",
                 path: "/"
             });
             

@@ -1,6 +1,8 @@
 import { Server } from "socket.io";
 import http from "http";
 import express from "express";
+import jwt from "jsonwebtoken";
+import User from "../models/user.models.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -36,8 +38,47 @@ const io = new Server(server, {
   cookie: {
     name: "jwt",
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    secure: process.env.NODE_ENV === "production"
+    sameSite: "lax", // Simplify for now
+    secure: false // Simplify for now
+  }
+});
+
+// Auth middleware for socket
+io.use(async (socket, next) => {
+  try {
+    const token = socket.handshake.query.token || 
+                  socket.handshake.auth?.token ||
+                  socket.handshake.headers?.authorization?.replace('Bearer ', '');
+                  
+    const userId = socket.handshake.query.userId;
+
+    console.log("Socket auth attempt:", { userId, hasToken: !!token });
+
+    if (token) {
+      try {
+        // Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("Socket token verified:", decoded);
+        
+        // Add user info to socket
+        socket.userId = decoded.userId;
+        return next();
+      } catch (error) {
+        console.log("Invalid socket token:", error.message);
+      }
+    }
+    
+    // If we reach here with a userId, allow connection anyway
+    if (userId) {
+      console.log("No valid token, but userId provided. Allowing connection.");
+      socket.userId = userId;
+      return next();
+    }
+    
+    return next(new Error("Authentication error"));
+  } catch (error) {
+    console.error("Socket auth error:", error.message);
+    next(new Error("Internal server error"));
   }
 });
 
@@ -50,7 +91,7 @@ const userSocketMap = {}; // {userId: socketId}
 io.on("connection", (socket) => {
   console.log("A user Connected", socket.id);
 
-  const userId = socket.handshake.query.userId;
+  const userId = socket.userId || socket.handshake.query.userId;
   if (userId) {
     console.log(`User ${userId} connected with socket ${socket.id}`);
     userSocketMap[userId] = socket.id;

@@ -3,6 +3,19 @@ import { BACKEND_URL } from '../config/api';
 
 console.log('Backend URL:', BACKEND_URL);
 
+// Store token in memory as a backup
+let memoryToken = localStorage.getItem('backup_token') || null;
+
+export const setMemoryToken = (token) => {
+  console.log('Setting memory token:', token ? 'token-provided' : 'no-token');
+  memoryToken = token;
+  if (token) {
+    localStorage.setItem('backup_token', token);
+  } else {
+    localStorage.removeItem('backup_token');
+  }
+};
+
 export const axiosInstance = axios.create({
   baseURL: `${BACKEND_URL}/api`,
   withCredentials: true,
@@ -14,6 +27,11 @@ export const axiosInstance = axios.create({
 // Add request interceptor to log all outgoing requests
 axiosInstance.interceptors.request.use(
   (config) => {
+    // Add Authorization header with memory token if available
+    if (memoryToken) {
+      config.headers.Authorization = `Bearer ${memoryToken}`;
+    }
+    
     console.log('Request:', {
       url: config.url,
       baseURL: config.baseURL,
@@ -37,6 +55,13 @@ axiosInstance.interceptors.response.use(
       statusText: response.statusText,
       data: response.data
     });
+    
+    // Extract token from response header if available
+    const authHeader = response.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      setMemoryToken(authHeader.split(' ')[1]);
+    }
+    
     return response;
   },
   (error) => {

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { axiosInstance } from "../lib/axios.js";
+import { axiosInstance, setMemoryToken } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 import { BACKEND_URL, API_ENDPOINTS } from "../config/api.js";
@@ -24,6 +24,13 @@ export const useAuthStore = create((set, get) => ({
       console.log("Checking authentication status...");
       const res = await axiosInstance.get("/auth/check");
       console.log("Auth check successful, user found");
+      
+      // If we have jwt in response headers, save it
+      if (res.headers && res.headers['authorization']) {
+        const token = res.headers['authorization'].replace('Bearer ', '');
+        setMemoryToken(token);
+      }
+      
       set({ authUser: res.data });
       get().connectSocket();
     } catch (error) {
@@ -32,6 +39,7 @@ export const useAuthStore = create((set, get) => ({
       // Clear any existing auth state if unauthorized
       if (error?.response?.status === 401) {
         console.log("Unauthorized response, clearing auth state");
+        setMemoryToken(null); // Clear memory token
         set({ authUser: null });
       } else {
         console.error("Unexpected error during auth check:", error?.message || "Unknown error");
@@ -45,6 +53,13 @@ export const useAuthStore = create((set, get) => ({
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", data);
+      
+      // Save token if provided
+      if (res.headers && res.headers['authorization']) {
+        const token = res.headers['authorization'].replace('Bearer ', '');
+        setMemoryToken(token);
+      }
+      
       set({ authUser: res.data });
       toast.success("Account created successfully");
       get().connectSocket();
@@ -59,6 +74,13 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
+      
+      // Save token if provided
+      if (res.headers && res.headers['authorization']) {
+        const token = res.headers['authorization'].replace('Bearer ', '');
+        setMemoryToken(token);
+      }
+      
       set({ authUser: res.data });
       toast.success("Logged in successfully");
       get().connectSocket();
@@ -72,11 +94,15 @@ export const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       await axiosInstance.post("/auth/logout");
+      setMemoryToken(null); // Clear memory token
       set({ authUser: null });
       toast.success("Logged out successfully");
       get().disconnectSocket();
     } catch (error) {
       toast.error(getErrorMessage(error));
+      // Clear anyway on error
+      setMemoryToken(null);
+      set({ authUser: null });
     }
   },
 
@@ -110,9 +136,19 @@ export const useAuthStore = create((set, get) => ({
     console.log("Attempting to connect socket for user:", authUser._id);
     
     try {
+      // Get the token from localStorage 
+      const token = localStorage.getItem('backup_token');
+      
       const socket = io(BACKEND_URL, {
         query: {
           userId: authUser._id,
+          token: token // Send token in query for auth
+        },
+        auth: {
+          token: token // Also send in auth field
+        },
+        extraHeaders: {
+          Authorization: token ? `Bearer ${token}` : undefined
         },
         withCredentials: true,
         reconnection: true,

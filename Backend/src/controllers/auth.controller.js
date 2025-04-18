@@ -28,8 +28,11 @@ export const signup =  async(req,res)=>{
 
     if(newUser){
         // generate web tokens here
-        generateToken(newUser._id, res);
+        const token = generateToken(newUser._id, res);
         await newUser.save();
+
+        // Also send token in header for API clients
+        res.setHeader('Authorization', `Bearer ${token}`);
 
         res.status(201).json({
             _id : newUser._id,
@@ -70,7 +73,10 @@ export const login = async (req, res) => {
         }
 
         // Generate token and set cookie
-        generateToken(user._id, res);
+        const token = generateToken(user._id, res);
+        
+        // Also send token in header for API clients
+        res.setHeader('Authorization', `Bearer ${token}`);
 
         // Send success response
         res.status(200).json({
@@ -92,8 +98,9 @@ export const logout = (req,res) => {
         res.cookie("jwt", "", {
             maxAge: 0,
             httpOnly: true,
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-            secure: process.env.NODE_ENV === "production",
+            // Temporarily disable these for debugging
+            // sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            // secure: process.env.NODE_ENV === "production",
             path: "/"
         });
         res.status(200).json({message:"Logged out successfully"});
@@ -142,6 +149,11 @@ export const updateProfile = async(req,res)=>{
 
 export const checkAuth = (req,res) => {
     try {
+        // If we have a token, send it back in the header for clients that use header auth
+        if (req.tokenFromHeader) {
+            res.setHeader('Authorization', `Bearer ${req.tokenFromHeader}`);
+        }
+        
         res.status(200).json(req.user);
     } catch (error) {
         console.log("Error in checkAuth controller", error.message);
