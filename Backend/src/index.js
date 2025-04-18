@@ -15,7 +15,18 @@ const PORT = process.env.PORT || 4000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.json());
+app.use(express.json({
+  limit: '50mb',
+  verify: (req, res, buf, encoding) => {
+    try {
+      JSON.parse(buf);
+    } catch (e) {
+      console.error("Invalid JSON in request body:", e.message);
+      res.status(400).json({ message: "Invalid JSON in request body" });
+      throw new Error("Invalid JSON");
+    }
+  }
+}));
 app.use(cookieParser());
 
 // CORS configuration

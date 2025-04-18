@@ -21,12 +21,21 @@ export const useAuthStore = create((set, get) => ({
 
   checkAuth: async () => {
     try {
+      console.log("Checking authentication status...");
       const res = await axiosInstance.get("/auth/check");
+      console.log("Auth check successful, user found");
       set({ authUser: res.data });
       get().connectSocket();
     } catch (error) {
       console.log("Error in checkAuth:", error);
-      set({ authUser: null });
+      
+      // Clear any existing auth state if unauthorized
+      if (error?.response?.status === 401) {
+        console.log("Unauthorized response, clearing auth state");
+        set({ authUser: null });
+      } else {
+        console.error("Unexpected error during auth check:", error?.message || "Unknown error");
+      }
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -87,7 +96,16 @@ export const useAuthStore = create((set, get) => ({
 
   connectSocket: () => {
     const { authUser } = get();
-    if (!authUser || get().socket?.connected) return;
+    if (!authUser) {
+      console.log("No auth user found for socket connection");
+      return;
+    }
+    
+    // Don't reconnect if already connected
+    if (get().socket?.connected) {
+      console.log("Socket already connected, skipping connection");
+      return;
+    }
 
     console.log("Attempting to connect socket for user:", authUser._id);
     
@@ -98,8 +116,10 @@ export const useAuthStore = create((set, get) => ({
         },
         withCredentials: true,
         reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000
       });
 
       socket.on("connect", () => {
@@ -109,35 +129,61 @@ export const useAuthStore = create((set, get) => ({
 
       socket.on("connect_error", (error) => {
         console.error("Socket connection error:", error.message);
-        toast.error("Connection issue. Please refresh the page.");
+        // Only show toast on first connection error to avoid spam
+        if (!get().socket) {
+          toast.error("Connection issue. Chat features may be limited.");
+        }
       });
 
       socket.on("getOnlineUsers", (userIds) => {
-        console.log("Online users received:", userIds);
+        console.log("Online users received:", userIds.length);
         set({ onlineUsers: userIds });
+      });
+
+      socket.on("error", (error) => {
+        console.error("Socket error:", error);
       });
 
       socket.on("disconnect", (reason) => {
         console.log("Socket disconnected:", reason);
-        if (reason === "io server disconnect") {
-          // the disconnection was initiated by the server, reconnect manually
-          socket.connect();
+        if (reason === "io server disconnect" || reason === "transport close") {
+          // The disconnection was initiated by the server or transport was closed, attempt to reconnect
+          setTimeout(() => {
+            console.log("Attempting to reconnect socket...");
+            socket.connect();
+          }, 3000);
         }
       });
 
+      socket.on("reconnect", (attemptNumber) => {
+        console.log("Socket reconnected after", attemptNumber, "attempts");
+      });
+
+      socket.on("reconnect_error", (error) => {
+        console.error("Socket reconnection error:", error.message);
+      });
+
+      socket.on("reconnect_failed", () => {
+        console.error("Socket reconnection failed after all attempts");
+        toast.error("Failed to connect to chat server. Please refresh the page.");
+      });
+
       socket.connect();
+      return socket;
     } catch (error) {
       console.error("Error initializing socket:", error);
-      toast.error("Connection issue. Please refresh the page.");
+      return null;
     }
   },
 
   disconnectSocket: () => {
     const socket = get().socket;
-    if (socket?.connected) {
+    if (socket) {
       console.log("Disconnecting socket");
-      socket.disconnect();
-      set({ socket: null });
+      if (socket.connected) {
+        socket.disconnect();
+      }
+      set({ socket: null, onlineUsers: [] });
     }
   },
 }));

@@ -33,8 +33,8 @@ export const protectRoute = async (req, res, next) => {
             res.cookie("jwt", "", {
                 maxAge: 0,
                 httpOnly: true,
-                sameSite: "none",
-                secure: true,
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+                secure: process.env.NODE_ENV === "production",
                 path: "/"
             });
             
