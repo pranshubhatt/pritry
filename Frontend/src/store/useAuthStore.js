@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
-import { BACKEND_URL } from "../config/api.js";
+import { BACKEND_URL, API_ENDPOINTS } from "../config/api.js";
 
 // Helper function to safely extract error messages
 const getErrorMessage = (error) =>
