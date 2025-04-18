@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "build": "chmod +x build.sh && ./build.sh"
+    "build": "echo 'No build step required for backend'"
   },
   "keywords": [],
   "author": "",

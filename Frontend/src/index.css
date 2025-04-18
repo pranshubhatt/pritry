@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* DaisyUI themes will be applied through the data-theme attribute */
+
 @layer base {
   :root {
     --background: 0 0% 100%;

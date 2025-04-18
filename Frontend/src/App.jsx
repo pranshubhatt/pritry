@@ -16,17 +16,11 @@ import { Toaster } from "react-hot-toast";
 
 
 const App = () => {
-  const {authUser,checkAuth,isCheckingAuth, onlineUers} = useAuthStore()
-
-    console.log({onlineUers})
-    
+  const {authUser, checkAuth, isCheckingAuth, onlineUers} = useAuthStore()
     
   useEffect(()=>{
     checkAuth()
   }, []);
-
-  console.log({authUser});
-
 
   if(isCheckingAuth && !authUser) return(
     <div className='flex items-center justify-center h-screen'>
@@ -34,10 +28,9 @@ const App = () => {
     </div>
   )
 
-
   return (
     <div data-theme="retro">
-       <Navbar /> 
+      <Navbar /> 
 
       <Routes>
         <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
