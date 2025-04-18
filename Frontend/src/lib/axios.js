@@ -100,4 +100,6 @@ axiosInstance.interceptors.response.use(
   }
 );
 
+// Export both as named and default export
+export { axiosInstance };
 export default axiosInstance; 
