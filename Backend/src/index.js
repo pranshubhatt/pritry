@@ -21,27 +21,28 @@ app.use(cookieParser());
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:4000',
   'https://pritry-frontend.onrender.com',
   'https://pritry.onrender.com',
   'https://pritry-1.onrender.com'
 ];
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
       console.log('Origin blocked:', origin);
+      callback(null, false);
     }
-    // Allow all origins during development
-    callback(null, true);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['set-cookie']
-}));
+};
+
+app.use(cors(corsOptions));
 
 // Socket.IO CORS configuration
 if (server._opts) {
@@ -72,33 +73,45 @@ app.use("/api/messages", messageRoutes);
 
 // Health check route
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'Server is running' });
+  res.status(200).json({ 
+    status: 'ok', 
+    message: 'Server is running',
+    env: process.env.NODE_ENV,
+    port: PORT
+  });
 });
 
-// Only try to serve static files if they exist
+// Serve static files in production
 if (process.env.NODE_ENV === "production") {
-  const frontendDistPath = path.join(__dirname, "../../Frontend/dist");
+  const frontendDistPath = path.join(__dirname, "../dist");
   
   try {
-    // Using import.meta.url for ES modules
-    if (import.meta.url.startsWith('file:')) {
-      const { existsSync } = await import('fs');
-      const distExists = existsSync(frontendDistPath);
+    const { existsSync } = await import('fs');
+    if (existsSync(frontendDistPath)) {
+      console.log("Frontend dist directory found at:", frontendDistPath);
       
-      if (distExists) {
-        console.log("Frontend dist directory found at:", frontendDistPath);
-        app.use(express.static(frontendDistPath));
-        app.get("*", (req, res) => {
-          res.sendFile(path.join(frontendDistPath, "index.html"));
-        });
-      } else {
-        console.log("Frontend dist directory not found at:", frontendDistPath);
-      }
+      // Serve static files
+      app.use(express.static(frontendDistPath));
+      
+      // Handle client-side routing - must be after API routes
+      app.get("*", (req, res) => {
+        res.sendFile(path.join(frontendDistPath, "index.html"));
+      });
+    } else {
+      console.log("Frontend dist directory not found at:", frontendDistPath);
     }
   } catch (error) {
-    console.log("Error checking frontend dist directory:", error.message);
+    console.error("Error serving static files:", error.message);
   }
 }
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ 
+    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message 
+  });
+});
 
 server.listen(PORT, () => {
   console.log(`Server is running on PORT: ${PORT} in ${process.env.NODE_ENV} mode`);

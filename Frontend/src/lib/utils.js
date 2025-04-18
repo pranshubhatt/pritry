@@ -1,3 +1,6 @@
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
 export function formatMessageTime(date) {
     return new Date(date).toLocaleTimeString("en-US", {
       hour: "2-digit",
@@ -5,3 +8,7 @@ export function formatMessageTime(date) {
       hour12: false,
     });
   }
+
+export function cn(...inputs) {
+  return twMerge(clsx(inputs));
+}
