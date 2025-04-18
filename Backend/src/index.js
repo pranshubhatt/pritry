@@ -97,6 +97,19 @@ app.get('/health', (req, res) => {
   });
 });
 
+// API status endpoint for connectivity testing
+app.get('/api/status', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'API is accessible',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV,
+    cors: {
+      allowedOrigins: allowedOrigins
+    }
+  });
+});
+
 // Serve static files in production
 if (process.env.NODE_ENV === "production") {
   const frontendDistPath = path.join(__dirname, "../dist");

@@ -4,38 +4,30 @@ import User from "../models/user.models.js"
 export const protectRoute = async (req, res, next) => {
     try {
         console.log("================== Auth Request ==================");
-        console.log("Headers:", req.headers);
-        console.log("Cookies received:", req.cookies);
+        console.log("Headers:", {
+            authorization: req.headers.authorization ? 'exists' : 'none',
+            'x-auth-token': req.headers['x-auth-token'] ? 'exists' : 'none',
+            cookie: req.headers.cookie ? 'exists' : 'none'
+        });
+        console.log("Cookies:", req.cookies);
         
-        const token = req.cookies.jwt;
-        console.log("JWT token from cookies:", token);
+        // Get token from various sources
+        const tokenFromCookie = req.cookies.jwt;
+        const tokenFromHeader = req.headers.authorization ? req.headers.authorization.replace('Bearer ', '') : null;
+        const tokenFromCustomHeader = req.headers['x-auth-token'];
+        
+        // Choose the first available token
+        const token = tokenFromCookie || tokenFromHeader || tokenFromCustomHeader;
+        
+        console.log("Token sources:", {
+            cookie: tokenFromCookie ? 'present' : 'absent',
+            header: tokenFromHeader ? 'present' : 'absent',
+            customHeader: tokenFromCustomHeader ? 'present' : 'absent',
+            finalToken: token ? 'found' : 'not found'
+        });
 
         if (!token) {
-            console.log("No token found in cookies");
-            
-            // Try to get token from Authorization header for testing
-            const authHeader = req.headers.authorization;
-            if (authHeader && authHeader.startsWith('Bearer ')) {
-                const headerToken = authHeader.split(' ')[1];
-                console.log("Found token in Authorization header:", headerToken);
-                req.tokenFromHeader = headerToken;
-                
-                try {
-                    const decoded = jwt.verify(headerToken, process.env.JWT_SECRET);
-                    console.log("Header token decoded successfully:", decoded);
-                    
-                    const user = await User.findById(decoded.userId).select("-password");
-                    if (!user) {
-                        return res.status(401).json({ message: "User not found" });
-                    }
-                    
-                    req.user = user;
-                    return next();
-                } catch (error) {
-                    console.log("Header token verification failed:", error.message);
-                }
-            }
-            
+            console.log("No token found in any source");
             return res.status(401).json({ message: "Unauthorized - No Token Provided" });
         }
 
@@ -51,6 +43,10 @@ export const protectRoute = async (req, res, next) => {
             }
 
             req.user = user;
+            
+            // Set token in response header for consistent token propagation
+            res.setHeader('Authorization', `Bearer ${token}`);
+            
             next();
         } catch (jwtError) {
             console.log("JWT verification error:", jwtError.message);
@@ -59,9 +55,6 @@ export const protectRoute = async (req, res, next) => {
             res.cookie("jwt", "", {
                 maxAge: 0,
                 httpOnly: true,
-                // Temporarily disable these for debugging
-                // sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-                // secure: process.env.NODE_ENV === "production",
                 path: "/"
             });
             

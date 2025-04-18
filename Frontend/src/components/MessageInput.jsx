@@ -80,23 +80,23 @@ const MessageInput = () => {
   const isDisabled = (!text.trim() && !imageData) || isSubmitting || isSendingMessage;
 
   return (
-    <div className="p-4 w-full">
+    <div className="p-4 w-full bg-[#1a1b26] border-t border-[#414868]">
       {imagePreview && (
         <div className="mb-3 flex items-center gap-2">
           <div className="relative">
             <img
               src={imagePreview}
               alt="Preview"
-              className="w-20 h-20 object-cover rounded-lg border border-zinc-700"
+              className="w-20 h-20 object-cover rounded-lg border border-[#414868]"
             />
             <button
               onClick={removeImage}
-              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-base-300
-              flex items-center justify-center"
+              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#24283b]
+              flex items-center justify-center hover:bg-[#414868] transition-colors"
               type="button"
               disabled={isSubmitting || isSendingMessage}
             >
-              <X className="size-3" />
+              <X className="size-3 text-[#a9b1d6]" />
             </button>
           </div>
         </div>
@@ -106,7 +106,7 @@ const MessageInput = () => {
         <div className="flex-1 flex gap-2">
           <input
             type="text"
-            className="w-full input input-bordered rounded-lg input-sm sm:input-md"
+            className="w-full input input-bordered rounded-lg input-sm sm:input-md bg-[#24283b] text-[#a9b1d6] border-[#414868] focus:border-[#7aa2f7] transition-colors"
             placeholder="Type a message..."
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -123,8 +123,8 @@ const MessageInput = () => {
 
           <button
             type="button"
-            className={`hidden sm:flex btn btn-circle
-                     ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
+            className={`hidden sm:flex btn btn-circle bg-[#24283b] border-[#414868] hover:bg-[#414868] transition-colors
+                     ${imagePreview ? "text-[#7aa2f7]" : "text-[#787c99] hover:text-[#a9b1d6]"}`}
             onClick={() => fileInputRef.current?.click()}
             disabled={isSubmitting || isSendingMessage}
           >
@@ -133,7 +133,7 @@ const MessageInput = () => {
         </div>
         <button
           type="submit"
-          className="btn btn-sm btn-circle"
+          className="btn btn-sm btn-circle bg-[#7aa2f7] hover:bg-[#89b4fa] text-[#1a1b26] border-none"
           disabled={isDisabled}
         >
           {(isSubmitting || isSendingMessage) ? (

@@ -76,3 +76,87 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Dark mode theme customization */
+[data-theme="dark"] {
+  --color-bg-primary: #1a1b26;
+  --color-bg-secondary: #24283b;
+  --color-text-primary: #a9b1d6;
+  --color-text-secondary: #787c99;
+  --color-accent: #7aa2f7;
+  --color-accent-hover: #89b4fa;
+  --color-border: #414868;
+  --color-message-sent: #7aa2f7;
+  --color-message-received: #414868;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary, #2a303c);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border, #475569);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent, #7aa2f7);
+}
+
+/* Custom animations */
+.smooth-fade {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Custom chat message styles */
+.chat-bubble-dark {
+  background-color: var(--color-message-received, #414868);
+  color: var(--color-text-primary, #e2e8f0);
+}
+
+.chat-bubble-accent {
+  background-color: var(--color-message-sent, #7aa2f7);
+  color: var(--color-bg-primary, #1a1b26);
+}
+
+/* Improve navbar appearance */
+.navbar-dark {
+  background-color: var(--color-bg-primary, #1a1b26);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Custom user list styles */
+.user-list-dark {
+  border-right: 1px solid var(--color-border, #414868);
+}
+
+.user-card {
+  transition: background-color 0.2s ease;
+}
+
+.user-card:hover {
+  background-color: var(--color-bg-secondary, #24283b);
+}
+
+.user-card.active {
+  background-color: var(--color-border, #414868);
+}

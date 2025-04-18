@@ -23,13 +23,13 @@ const App = () => {
   }, []);
 
   if(isCheckingAuth && !authUser) return(
-    <div className='flex items-center justify-center h-screen'>
-      <Loader className="size-10 animate-spin"/>
+    <div className='flex items-center justify-center h-screen bg-[#1a1b26] text-[#a9b1d6]'>
+      <Loader className="size-10 animate-spin text-[#7aa2f7]"/>
     </div>
   )
 
   return (
-    <div data-theme="retro">
+    <div data-theme="dark" className="bg-[#1a1b26] text-[#a9b1d6] min-h-screen">
       <Navbar /> 
 
       <Routes>
@@ -40,7 +40,28 @@ const App = () => {
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
       </Routes>
 
-      <Toaster/>
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: '#24283b',
+            color: '#a9b1d6',
+          },
+          success: {
+            iconTheme: {
+              primary: '#7aa2f7',
+              secondary: '#1a1b26',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#f7768e',
+              secondary: '#1a1b26',
+            },
+          },
+        }}
+      />
     </div>
   )
 }

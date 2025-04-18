@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare } from "lucide-react";
 import AuthImagePattern from "../components/AuthImagePattern";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { BACKEND_URL } from "../config/api";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +18,7 @@ const LoginPage = () => {
     email: "",
     password: "",
   });
+  const [isCheckingConnection, setIsCheckingConnection] = useState(false);
 
   const validateForm = () => {
     let isValid = true;
@@ -44,6 +48,31 @@ const LoginPage = () => {
     e.preventDefault();
     if (!validateForm()) return;
     await login(formData);
+  };
+
+  const checkConnection = async () => {
+    setIsCheckingConnection(true);
+    try {
+      toast.success(`Attempting to connect to: ${BACKEND_URL}`);
+      const response = await axios.get(`${BACKEND_URL}/api/status`, { timeout: 5000 });
+      toast.success(`Server is online: ${response.data.message || 'OK'}`);
+    } catch (error) {
+      console.error('Connection test error:', error);
+      
+      if (error.message === 'Network Error') {
+        toast.error(`Cannot connect to ${BACKEND_URL} - Network error`);
+      } else if (error.response) {
+        // The server responded with a status code outside of 2xx
+        toast.error(`Server responded with status: ${error.response.status} - ${error.response.statusText}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        toast.error('No response received from server');
+      } else {
+        toast.error(`Error: ${error.message}`);
+      }
+    } finally {
+      setIsCheckingConnection(false);
+    }
   };
 
   return (
@@ -149,6 +178,23 @@ const LoginPage = () => {
                 Create account
               </Link>
             </p>
+          </div>
+
+          <div className="pt-4 text-center">
+            <button 
+              onClick={checkConnection} 
+              className="btn btn-sm btn-outline" 
+              disabled={isCheckingConnection}
+            >
+              {isCheckingConnection ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Checking...
+                </>
+              ) : (
+                "Check Connection"
+              )}
+            </button>
           </div>
         </div>
       </div>

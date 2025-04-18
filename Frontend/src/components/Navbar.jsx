@@ -1,64 +1,64 @@
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
-import { LogOut, MessageSquare, Settings, User } from "lucide-react";
+import { MessageSquare, Settings, User, LogOut } from "lucide-react";
 
 const Navbar = () => {
-  const { logout, authUser } = useAuthStore();
+  const { authUser, logout } = useAuthStore();
 
   return (
-    <header
-      className="border-b border-base-300 fixed w-full top-0 z-40 
-    backdrop-blur-lg bg-base-100/80"
-    >
-      <div className="container mx-auto px-4 h-16">
-        <div className="flex items-center justify-between h-full">
-          <div className="flex items-center gap-8">
-            <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-all">
-              <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                <MessageSquare className="w-5 h-5 text-primary" />
-              </div>
-              <h1 className="text-lg font-bold">Chatmate</h1>
+    <div className="navbar navbar-dark bg-[#1a1b26] border-b border-[#414868] px-4">
+      <div className="navbar-start">
+        <Link to="/" className="text-lg font-semibold flex items-center text-[#7aa2f7]">
+          <MessageSquare className="inline-block mr-2" size={24} />
+          <span>ChatMate</span>
+        </Link>
+      </div>
+
+      <div className="navbar-end">
+        {authUser ? (
+          <div className="flex items-center gap-2">
+            <Link
+              to="/settings"
+              className="btn btn-ghost btn-circle text-[#a9b1d6] hover:bg-[#414868]"
+            >
+              <Settings size={20} />
+            </Link>
+
+            <Link
+              to="/profile"
+              className="btn btn-ghost btn-circle text-[#a9b1d6] hover:bg-[#414868]"
+            >
+              <User size={20} />
+            </Link>
+
+            <button
+              onClick={logout}
+              className="btn btn-ghost text-[#a9b1d6] hover:bg-[#414868]"
+            >
+              <LogOut size={20} className="mr-1" />
+              <span>Logout</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-4">
+            <Link
+              to="/login"
+              className="btn bg-transparent hover:bg-[#24283b] text-[#7aa2f7] border-[#7aa2f7] hover:border-[#7aa2f7]"
+            >
+              Login
+            </Link>
+
+            <Link
+              to="/signup"
+              className="btn bg-[#7aa2f7] hover:bg-[#89b4fa] text-[#1a1b26] border-none"
+            >
+              Sign Up
             </Link>
           </div>
-
-          <div className="flex items-center gap-2">
-            {authUser ? (
-              <>
-                <Link
-                  to="/settings"
-                  className="btn btn-sm gap-2 transition-colors"
-                >
-                  <Settings className="w-4 h-4" />
-                  <span className="hidden sm:inline">Settings</span>
-                </Link>
-
-                <Link to="/profile" className="btn btn-sm gap-2">
-                  <User className="size-5" />
-                  <span className="hidden sm:inline">Profile</span>
-                </Link>
-
-                <button 
-                  className="btn btn-sm btn-ghost gap-2 text-error" 
-                  onClick={logout}
-                >
-                  <LogOut className="size-4" />
-                  <span className="hidden sm:inline">Logout</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="btn btn-sm btn-primary">
-                  Login
-                </Link>
-                <Link to="/signup" className="btn btn-sm">
-                  Sign Up
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
+        )}
       </div>
-    </header>
+    </div>
   );
 };
+
 export default Navbar;

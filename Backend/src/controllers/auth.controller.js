@@ -78,6 +78,9 @@ export const login = async (req, res) => {
         // Also send token in header for API clients
         res.setHeader('Authorization', `Bearer ${token}`);
 
+        // Log the success for debugging
+        console.log(`User ${user._id} logged in successfully, token provided`);
+
         // Send success response
         res.status(200).json({
             _id: user._id,
@@ -149,10 +152,17 @@ export const updateProfile = async(req,res)=>{
 
 export const checkAuth = (req,res) => {
     try {
-        // If we have a token, send it back in the header for clients that use header auth
-        if (req.tokenFromHeader) {
-            res.setHeader('Authorization', `Bearer ${req.tokenFromHeader}`);
+        // Always send the token back in the response header
+        const token = req.cookies.jwt || 
+                     (req.headers.authorization ? req.headers.authorization.replace('Bearer ', '') : null) ||
+                     req.headers['x-auth-token'];
+                     
+        if (token) {
+            res.setHeader('Authorization', `Bearer ${token}`);
         }
+        
+        // Log successful auth check
+        console.log(`Auth check successful for user ${req.user._id}`);
         
         res.status(200).json(req.user);
     } catch (error) {
