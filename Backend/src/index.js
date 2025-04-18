@@ -26,12 +26,15 @@ const allowedOrigins = [
   'https://backend-yzux.onrender.com',
   'https://pritry-frontend.onrender.com',
   'https://pritry.onrender.com',
-  'https://pritry-1.onrender.com'
+  'https://pritry-1.onrender.com',
+  // Add a wildcard for debugging
+  '*'
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    console.log('Request origin:', origin);
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
       callback(null, true);
     } else {
       console.log('Origin blocked:', origin);
@@ -40,7 +43,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   exposedHeaders: ['set-cookie']
 };
 

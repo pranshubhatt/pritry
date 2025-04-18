@@ -5,12 +5,14 @@ export const generateToken = (userId, res) => {
     expiresIn: "7d",
   });
 
+  console.log("Setting JWT cookie for user:", userId);
+  
   res.cookie("jwt", token, {
     maxAge: 7 * 24 * 60 * 60 * 1000, // MS
     httpOnly: true, // prevent XSS attacks cross-site scripting attacks
     sameSite: "none", // Required for cross-site cookie
     secure: true, // Required for sameSite: "none"
-    path: "/", // Ensure cookie is available on all paths
+    path: "/" // Ensure cookie is available on all paths
   });
 
   return token;
