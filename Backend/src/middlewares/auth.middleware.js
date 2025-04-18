@@ -4,31 +4,45 @@ import User from "../models/user.models.js"
 export const protectRoute = async (req, res, next) => {
     try {
         const token = req.cookies.jwt;
+        
+        console.log("Cookies received:", req.cookies);
+        console.log("JWT token from cookies:", token);
 
         if (!token) {
             console.log("No token found in cookies");
             return res.status(401).json({ message: "Unauthorized - No Token Provided" });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            console.log("Token decoded successfully:", decoded);
 
-        if (!decoded) {
-            console.log("Invalid token");
+            const user = await User.findById(decoded.userId).select("-password");
+
+            if (!user) {
+                console.log("User not found");
+                return res.status(401).json({ message: "User not found" });
+            }
+
+            req.user = user;
+            next();
+        } catch (jwtError) {
+            console.log("JWT verification error:", jwtError.message);
+            
+            // Clear the invalid cookie
+            res.cookie("jwt", "", {
+                maxAge: 0,
+                httpOnly: true,
+                sameSite: "none",
+                secure: true,
+                path: "/"
+            });
+            
             return res.status(401).json({ message: "Unauthorized - Invalid token" });
         }
-
-        const user = await User.findById(decoded.userId).select("-password");
-
-        if (!user) {
-            console.log("User not found");
-            return res.status(401).json({ message: "User not found" });
-        }
-
-        req.user = user;
-        next();
     } catch (error) {
         console.log("Error in protectRoute middleware:", error.message);
-        res.status(401).json({ message: "Unauthorized - Invalid token" });
+        res.status(401).json({ message: "Unauthorized - Internal error" });
     }
 };
 

@@ -89,22 +89,55 @@ export const useAuthStore = create((set, get) => ({
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
 
-    const socket = io(BACKEND_URL, {
-      query: {
-        userId: authUser._id,
-      },
-      withCredentials: true
-    });
-    socket.connect();
+    console.log("Attempting to connect socket for user:", authUser._id);
+    
+    try {
+      const socket = io(BACKEND_URL, {
+        query: {
+          userId: authUser._id,
+        },
+        withCredentials: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+      });
 
-    set({ socket: socket });
+      socket.on("connect", () => {
+        console.log("Socket connected successfully:", socket.id);
+        set({ socket: socket });
+      });
 
-    socket.on("getOnlineUsers", (userIds) => {
-      set({ onlineUsers: userIds });
-    });
+      socket.on("connect_error", (error) => {
+        console.error("Socket connection error:", error.message);
+        toast.error("Connection issue. Please refresh the page.");
+      });
+
+      socket.on("getOnlineUsers", (userIds) => {
+        console.log("Online users received:", userIds);
+        set({ onlineUsers: userIds });
+      });
+
+      socket.on("disconnect", (reason) => {
+        console.log("Socket disconnected:", reason);
+        if (reason === "io server disconnect") {
+          // the disconnection was initiated by the server, reconnect manually
+          socket.connect();
+        }
+      });
+
+      socket.connect();
+    } catch (error) {
+      console.error("Error initializing socket:", error);
+      toast.error("Connection issue. Please refresh the page.");
+    }
   },
 
   disconnectSocket: () => {
-    if (get().socket?.connected) get().socket.disconnect();
+    const socket = get().socket;
+    if (socket?.connected) {
+      console.log("Disconnecting socket");
+      socket.disconnect();
+      set({ socket: null });
+    }
   },
 }));
