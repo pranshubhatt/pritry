@@ -22,6 +22,13 @@ export const useAuthStore = create((set, get) => ({
   checkAuth: async () => {
     try {
       console.log("Checking authentication status...");
+      
+      // Make sure we're using the latest token
+      const token = localStorage.getItem('backup_token');
+      if (token) {
+        console.log("Found backup token in storage");
+      }
+      
       const res = await axiosInstance.get("/auth/check");
       console.log("Auth check successful, user found");
       
@@ -29,10 +36,12 @@ export const useAuthStore = create((set, get) => ({
       if (res.headers && res.headers['authorization']) {
         const token = res.headers['authorization'].replace('Bearer ', '');
         setMemoryToken(token);
+        console.log("Saved new token from headers");
       }
       
       set({ authUser: res.data });
       get().connectSocket();
+      return true;
     } catch (error) {
       console.log("Error in checkAuth:", error);
       
@@ -44,6 +53,7 @@ export const useAuthStore = create((set, get) => ({
       } else {
         console.error("Unexpected error during auth check:", error?.message || "Unknown error");
       }
+      return false;
     } finally {
       set({ isCheckingAuth: false });
     }

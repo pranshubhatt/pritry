@@ -6,9 +6,12 @@ import toast from 'react-hot-toast';
 const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageData, setImageData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
   const { sendMessage, isSendingMessage } = useChatStore();
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -18,22 +21,35 @@ const MessageInput = () => {
       toast.error("Please select an image to upload");
       return;
     }
+    
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`Image size must be under 10MB. Current size: ${Math.round(file.size/1024/1024)}MB`);
+      return;
+    }
 
+    // Create object URL for preview (more efficient)
+    setImagePreview(URL.createObjectURL(file));
+    
+    // Read file as data URL for sending
     const reader = new FileReader();
     reader.onloadend = () => {
-      setImagePreview(reader.result);
+      setImageData(reader.result);
     };
     reader.readAsDataURL(file);
   };
 
   const removeImage = () => {
-    setImagePreview(null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview); // Clean up object URL
+      setImagePreview(null);
+    }
+    setImageData(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!text.trim() && !imagePreview) return;
+    if (!text.trim() && !imageData) return;
     if (isSubmitting || isSendingMessage) return;
 
     setIsSubmitting(true);
@@ -41,12 +57,16 @@ const MessageInput = () => {
     try {
       const success = await sendMessage({
         text: text.trim(),
-        image: imagePreview,
+        image: imageData,
       });
 
       if (success) {
         setText("");
-        setImagePreview(null);
+        if (imagePreview) {
+          URL.revokeObjectURL(imagePreview); // Clean up object URL
+          setImagePreview(null);
+        }
+        setImageData(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     } catch (error) {
@@ -57,7 +77,7 @@ const MessageInput = () => {
     }
   };
 
-  const isDisabled = (!text.trim() && !imagePreview) || isSubmitting || isSendingMessage;
+  const isDisabled = (!text.trim() && !imageData) || isSubmitting || isSendingMessage;
 
   return (
     <div className="p-4 w-full">

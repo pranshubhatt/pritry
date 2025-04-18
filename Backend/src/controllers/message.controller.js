@@ -21,12 +21,16 @@ export const getMessages = async (req, res) => {
     const { id: userToChatId } = req.params;
     const myId = req.user._id;
 
+    console.log(`Fetching messages between ${myId} and ${userToChatId}`);
+
     const messages = await Message.find({
       $or: [
         { senderId: myId, receiverId: userToChatId },
         { senderId: userToChatId, receiverId: myId },
       ],
-    });
+    }).sort({ createdAt: 1 }); // Sort messages by creation time
+
+    console.log(`Found ${messages.length} messages`);
     res.status(200).json(messages);
   } catch (error) {
     console.log("Error in getMessages controller", error.message);
@@ -40,6 +44,8 @@ export const sendMessage = async (req, res) => {
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
+    console.log(`Sending message from ${senderId} to ${receiverId}`);
+
     if (!text && !image) {
       return res.status(400).json({ message: "Text or image is required" });
     }
@@ -50,7 +56,12 @@ export const sendMessage = async (req, res) => {
         console.log("Uploading image to Cloudinary...");
         const uploadResponse = await cloudinary.uploader.upload(image, {
           resource_type: 'auto',
-          timeout: 60000
+          timeout: 120000, // Longer timeout for larger images
+          transformation: [
+            { quality: "auto" },
+            { fetch_format: "auto" },
+            { width: 1000, crop: "limit" } // Limit size for better performance
+          ]
         });
         imageUrl = uploadResponse.secure_url;
         console.log("Image uploaded successfully:", imageUrl);
